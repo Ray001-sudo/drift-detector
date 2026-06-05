@@ -37,7 +37,7 @@ services:
     name: drift-processor
     env: docker
     dockerfilePath: ./processor/Dockerfile
-    plan: standard
+    plan: free
     envVars:
       - key: DATABASE_URL
         sync: false
