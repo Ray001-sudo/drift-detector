@@ -51,8 +51,32 @@ if (token) {
 
 function initDashboard() {
     initCharts();
+    fetchHistoricalData();
     connectWebSocket();
     setInterval(updateClock, 1000);
+}
+
+async function fetchHistoricalData() {
+    try {
+        const scoreRes = await fetch("/api/v1/drift/scores?limit=50", {
+            headers: {"Authorization": "Bearer " + token}
+        });
+        if (scoreRes.ok) {
+            const scores = await scoreRes.json();
+            // Process from oldest to newest to replay
+            scores.reverse().forEach(score => handleScore(score));
+        }
+
+        const alertRes = await fetch("/api/v1/drift/alerts?limit=20", {
+            headers: {"Authorization": "Bearer " + token}
+        });
+        if (alertRes.ok) {
+            const histAlerts = await alertRes.json();
+            histAlerts.reverse().forEach(a => handleAlert(a));
+        }
+    } catch (e) {
+        console.error("Failed to load historical data", e);
+    }
 }
 
 function connectWebSocket() {
