@@ -9,7 +9,7 @@ from datetime import timedelta
 from common.config import settings
 
 broker_url = settings.KAFKA_BOOTSTRAP_SERVERS
-extra_broker_params = {}
+ssl_context = None
 
 if settings.KAFKA_SASL_ENABLED:
     broker_credentials = faust.SASLCredentials(
@@ -18,24 +18,20 @@ if settings.KAFKA_SASL_ENABLED:
         mechanism=settings.KAFKA_SASL_MECHANISM
     )
     
-    # Secure the context exactly how we did for aiokafka to bypass self-signed CA restrictions
     if "SSL" in settings.KAFKA_SECURITY_PROTOCOL:
-        context = ssl.create_default_context()
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_NONE
-        
-        # Pass this context straight to Faust's underlying aiokafka producer/consumer drivers
-        extra_broker_params["ssl_context"] = context
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
 else:
     broker_credentials = None
 
 app = faust.App(
     'drift-processor',
-    broker=f"kafka://{broker_url}",  # Kept as standard kafka:// so transport scheme maps correctly
+    broker=f"kafka://{broker_url}",
     broker_credentials=broker_credentials,
-    broker_client_with_ssl=extra_broker_params,  # Injects our customized SSL context map
+    ssl_context=ssl_context,  # Passed directly to App so SASL layer inherits encryption
     store='rocksdb://',
-    datadir='/app/rocksdb_data',  # Overrides default data directory to prevent Permission Errors
+    datadir='/app/rocksdb_data',
     topic_partitions=3,
     autodiscover=['processor.agents']
 )
