@@ -138,7 +138,8 @@ function handleScore(data) {
     if (data.detector_type === "psi") featuresData[fname].psi = data.score;
     if (data.detector_type === "kl") featuresData[fname].kl = data.score;
     if (data.detector_type === "mmd") {
-        document.getElementById("mmd-pvalue").innerText = data.metadata.p_value.toFixed(4);
+        const pval = data.metadata ? data.metadata.p_value : data.score;
+        document.getElementById("mmd-pvalue").innerText = pval ? pval.toFixed(4) : "N/A";
     }
     
     updateCards();
