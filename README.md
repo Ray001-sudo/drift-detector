@@ -8,7 +8,7 @@
 
 > **Live Demo:** [https://drift-dashboard-vth9.onrender.com/](https://drift-dashboard-vth9.onrender.com/) &nbsp;|&nbsp; **Grafana:** [http://localhost:3000](http://localhost:3000)
 
-![Dashboard Screenshot](docs/screenshots/grafana-drift-event.png)
+![Dashboard Screenshot](docs/screenshots/real_dashboard.png)
 *Live dashboard showing a drift event propagating through the pipeline — PSI score on the `age` feature climbing through the 0.20 threshold, triggering automatic retraining.*
 
 ---
