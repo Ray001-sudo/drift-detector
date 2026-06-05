@@ -1,6 +1,7 @@
 import sys
 import os
 import ssl
+
 # Path-patch the root directory so autodiscovery finds sibling modules cleanly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -10,37 +11,32 @@ from common.config import settings
 
 broker_url = settings.KAFKA_BOOTSTRAP_SERVERS
 
-# Setup base application options
-app_options = {
-    'id': 'drift-processor',
-    'broker': f"kafka://{broker_url}",
-    'store': 'rocksdb://',
-    'datadir': '/app/rocksdb_data',
-    'topic_partitions': 3,
-    'autodiscover': ['processor.agents']
-}
+# 1. Initialize the Faust App cleanly without complex kwargs
+app = faust.App(
+    'drift-processor',
+    broker=f"kafka://{broker_url}",
+    store='rocksdb://',
+    datadir='/app/rocksdb_data',
+    topic_partitions=3,
+    autodiscover=['processor.agents']
+)
 
+# 2. Directly mutate the configuration state to force SASL_SSL
 if settings.KAFKA_SASL_ENABLED:
-    broker_credentials = faust.SASLCredentials(
+    app.conf.broker_credentials = faust.SASLCredentials(
         username=settings.KAFKA_SASL_USERNAME,
         password=settings.KAFKA_SASL_PASSWORD,
         mechanism=settings.KAFKA_SASL_MECHANISM
     )
-    app_options['broker_credentials'] = broker_credentials
     
     if "SSL" in settings.KAFKA_SECURITY_PROTOCOL:
-        context = ssl.create_default_context()
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_NONE
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
         
-        # This is the secret sauce: explicitly override both consumer and producer parameters
-        # inside Faust's underlying mapping parameters to lock SSL active.
-        app_options['broker_client_with_ssl'] = {
-            'ssl_context': context
-        }
-
-# Initialize the Faust App with our unified configuration bundle
-app = faust.App(**app_options)
+        # CRITICAL: Forcing the SSL context directly into the config state guarantees 
+        # the underlying aiokafka driver reads it and applies the TLS wrapper.
+        app.conf.ssl_context = ctx
 
 def main() -> None:
     app.main()
