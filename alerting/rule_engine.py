@@ -18,27 +18,30 @@ logger = logging.getLogger(__name__)
 
 broker_url = settings.KAFKA_BOOTSTRAP_SERVERS
 
-# 1. Initialize the Faust App cleanly, pointing datadir to a writable /tmp directory
-app = faust.App(
-    'drift-alerter',
-    broker=f"kafka://{broker_url}",
-    datadir='/tmp/drift-alerter-data' 
-)
-
-# 2. Hard-force the SSL Context
-# We check for the presence of the username directly to bypass any boolean parsing bugs.
-if settings.KAFKA_SASL_USERNAME:
-    app.conf.broker_credentials = faust.SASLCredentials(
-        username=settings.KAFKA_SASL_USERNAME,
-        password=settings.KAFKA_SASL_PASSWORD,
-        mechanism=settings.KAFKA_SASL_MECHANISM or "PLAIN"
-    )
-    
-    # Forcefully inject the SSL context so Faust cannot default to plaintext
+# 1. Build the SSL context first
+ctx = None
+if settings.KAFKA_SASL_ENABLED and "SSL" in settings.KAFKA_SECURITY_PROTOCOL:
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
-    app.conf.ssl_context = ctx
+
+# 2. Build the SASL Credentials and inject the SSL context directly inside it
+broker_credentials = None
+if settings.KAFKA_SASL_ENABLED:
+    broker_credentials = faust.SASLCredentials(
+        username=settings.KAFKA_SASL_USERNAME,
+        password=settings.KAFKA_SASL_PASSWORD,
+        mechanism=settings.KAFKA_SASL_MECHANISM or "PLAIN",
+        ssl_context=ctx  # <-- THIS officially triggers Faust's internal switch to SASL_SSL!
+    )
+
+# 3. Initialize the Faust App cleanly
+app = faust.App(
+    'drift-alerter',
+    broker=f"kafka://{broker_url}",
+    broker_credentials=broker_credentials,
+    datadir='/tmp/drift-alerter-data' 
+)
 
 scores_topic = app.topic('drift.scores', value_type=dict)
 alerts_topic = app.topic('drift.alerts', value_type=dict)
