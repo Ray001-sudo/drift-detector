@@ -1,6 +1,8 @@
 import sys
 import os
+# Explicitly path-patch the root directory so autodiscovery finds sibling modules cleanly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import faust
 from datetime import timedelta
 from common.config import settings
@@ -14,8 +16,8 @@ if settings.KAFKA_SASL_ENABLED:
         password=settings.KAFKA_SASL_PASSWORD,
         mechanism=settings.KAFKA_SASL_MECHANISM
     )
-    # Switch the connection string scheme to tell Faust to use an SSL encrypted channel
-    broker_scheme = "kafka+ssl://"
+    # Changed from "kafka+ssl://" to "ssl://" so Faust maps to its native SSL transport driver
+    broker_scheme = "ssl://"
 else:
     broker_credentials = None
     broker_scheme = "kafka://"
