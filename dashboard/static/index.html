@@ -3,82 +3,381 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drift Detection Dashboard</title>
+    <title>ML Drift Dashboard</title>
+    <meta name="description" content="Real-time ML model drift detection dashboard with PSI, KL-divergence, and MMD monitoring">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 <body>
+    <!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
     <div id="login-container">
-        <h2>Drift Detection System</h2>
-        <form id="login-form">
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <div id="login-error" style="color: red; display: none;">Login failed</div>
+        <div class="login-card">
+            <div class="login-logo">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6366f1"/><stop offset="100%" style="stop-color:#8b5cf6"/></linearGradient></defs>
+                    <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/>
+                </svg>
+            </div>
+            <h2>ML Drift Dashboard</h2>
+            <p class="login-subtitle">Real-time model monitoring & drift detection</p>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter your username" required autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
+                </div>
+                <button type="submit" id="login-btn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loader" style="display:none"></span>
+                </button>
+            </form>
+            <div id="login-error">Invalid username or password</div>
+        </div>
     </div>
 
-    <div id="dashboard-container" style="display: none;">
-        <header>
-            <h1>ML Drift Dashboard</h1>
-            <div class="status-bar">
-                <span class="dot" id="live-dot"></span> Live
-                <span id="req-min">0</span> req/min
-                <span id="utc-time"></span>
-                <button id="logout-btn">Logout</button>
-            </div>
-        </header>
+    <!-- ═══════════════ MAIN APP SHELL ═══════════════ -->
+    <div id="app-container" style="display: none;">
 
-        <div class="metrics-grid">
-            <div class="card">
-                <h3>Features Monitored</h3>
-                <div class="value" id="features-monitored">0</div>
+        <!-- ──── SIDEBAR ──── -->
+        <aside id="sidebar">
+            <div class="sidebar-brand">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/>
+                </svg>
+                <span>ML Drift</span>
             </div>
-            <div class="card">
-                <h3>Max PSI</h3>
-                <div class="value" id="max-psi">0.00</div>
-            </div>
-            <div class="card">
-                <h3>Max KL</h3>
-                <div class="value" id="max-kl">0.00</div>
-            </div>
-            <div class="card">
-                <h3>MMD p-value</h3>
-                <div class="value" id="mmd-pvalue">1.00</div>
-            </div>
-        </div>
 
-        <div class="pipeline-status">
-            <div class="stage" id="stage-kafka">Kafka</div>
-            <div class="stage" id="stage-faust">Faust</div>
-            <div class="stage" id="stage-alert">Alert</div>
-            <div class="stage" id="stage-airflow">Airflow</div>
-            <div class="stage" id="stage-mlflow">MLflow</div>
-        </div>
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" data-page="dashboard">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#models" class="nav-item" data-page="models">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    <span>Models</span>
+                </a>
+                <a href="#monitoring" class="nav-item" data-page="monitoring">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <span>Monitoring</span>
+                </a>
+                <a href="#alerts" class="nav-item" data-page="alerts">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                    <span>Alerts</span>
+                    <span class="nav-badge" id="alerts-badge" style="display:none">0</span>
+                </a>
+                <a href="#settings" class="nav-item" data-page="settings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                    <span>Settings</span>
+                </a>
+                <a href="#help" class="nav-item" data-page="help">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span>Help</span>
+                </a>
+            </nav>
 
-        <div id="retrain-banner" style="display:none; background:#ffeb3b; padding:10px; text-align:center; color:black; font-weight:bold; margin-bottom: 20px; border-radius: 4px;">
-            Auto-retrain triggered via Airflow DAG!
-        </div>
+            <div class="sidebar-footer">
+                <div class="connection-status">
+                    <span class="dot" id="live-dot"></span>
+                    <span id="connection-text">Disconnected</span>
+                </div>
+            </div>
+        </aside>
 
-        <div class="charts-grid">
-            <div class="chart-container">
-                <canvas id="psiChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <canvas id="klChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <canvas id="psiTimeChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <canvas id="distChart"></canvas>
-            </div>
-        </div>
+        <!-- ──── MAIN CONTENT ──── -->
+        <main id="main-content">
+            <!-- TOP BAR -->
+            <header id="top-bar">
+                <div class="top-bar-left">
+                    <h1 id="page-title">Dashboard</h1>
+                </div>
+                <div class="top-bar-right">
+                    <span class="top-bar-time" id="utc-time"></span>
+                    <div class="notification-bell" id="notification-bell" title="Alerts">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                        <span class="notif-count" id="notif-count" style="display:none">0</span>
+                    </div>
+                    <div class="user-profile" id="user-profile">
+                        <div class="avatar" id="user-avatar">A</div>
+                        <div class="user-info">
+                            <span class="user-name" id="user-name">Admin</span>
+                            <span class="user-role" id="user-role">admin</span>
+                        </div>
+                        <div class="profile-dropdown" id="profile-dropdown">
+                            <button id="logout-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-        <div class="alert-log-container">
-            <h3>Recent Alerts</h3>
-            <ul id="alert-list"></ul>
-        </div>
+            <!-- RETRAIN BANNER -->
+            <div id="retrain-banner" style="display:none">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Auto-retrain triggered via Airflow DAG!
+            </div>
+
+            <!-- ═══ PAGE: DASHBOARD ═══ -->
+            <section id="page-dashboard" class="page active">
+                <div class="metrics-grid">
+                    <div class="metric-card card-psi">
+                        <div class="metric-label">Max PSI</div>
+                        <div class="metric-value" id="max-psi">—</div>
+                        <div class="metric-sub">Population Stability Index</div>
+                    </div>
+                    <div class="metric-card card-mmd">
+                        <div class="metric-label">MMD p-value</div>
+                        <div class="metric-value" id="mmd-pvalue">—</div>
+                        <div class="metric-sub">Maximum Mean Discrepancy</div>
+                    </div>
+                    <div class="metric-card card-features">
+                        <div class="metric-label">Total Features</div>
+                        <div class="metric-value" id="features-monitored">—</div>
+                        <div class="metric-sub">Actively monitored</div>
+                    </div>
+                    <div class="metric-card card-update">
+                        <div class="metric-label">Last Update</div>
+                        <div class="metric-value metric-value-sm" id="last-update">—</div>
+                        <div class="metric-sub">Most recent drift event</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="chart-panel">
+                        <div class="panel-header">
+                            <h3>PSI by Feature</h3>
+                            <span class="panel-subtitle">Population Stability Index</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="psiChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-panel">
+                        <div class="panel-header">
+                            <h3>KL Divergence by Feature</h3>
+                            <span class="panel-subtitle">Kullback-Leibler Divergence</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="klChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="alerts-panel">
+                        <div class="panel-header">
+                            <h3>Recent Alerts</h3>
+                        </div>
+                        <ul id="alert-list" class="alert-feed"></ul>
+                        <div class="empty-state" id="alerts-empty">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                            <p>No alerts yet</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ PAGE: MODELS ═══ -->
+            <section id="page-models" class="page">
+                <div class="page-header-bar">
+                    <h2>Registered Models</h2>
+                    <p>View all model versions and their baseline status</p>
+                </div>
+                <div class="table-card">
+                    <table id="models-table">
+                        <thead>
+                            <tr>
+                                <th>Model Version</th>
+                                <th>Baselines</th>
+                                <th>Last Drift Event</th>
+                                <th>Drift Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="models-tbody"></tbody>
+                    </table>
+                    <div class="empty-state" id="models-empty">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                        <p>No models registered</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ PAGE: MONITORING ═══ -->
+            <section id="page-monitoring" class="page">
+                <div class="page-header-bar">
+                    <h2>Real-Time Monitoring</h2>
+                    <p>Time-series drift metrics and pipeline health</p>
+                </div>
+
+                <div class="pipeline-status">
+                    <div class="stage" id="stage-kafka"><span class="stage-dot"></span>Kafka</div>
+                    <div class="stage-arrow">→</div>
+                    <div class="stage" id="stage-faust"><span class="stage-dot"></span>Faust</div>
+                    <div class="stage-arrow">→</div>
+                    <div class="stage" id="stage-alert"><span class="stage-dot"></span>Alert Engine</div>
+                    <div class="stage-arrow">→</div>
+                    <div class="stage" id="stage-airflow"><span class="stage-dot"></span>Airflow</div>
+                    <div class="stage-arrow">→</div>
+                    <div class="stage" id="stage-mlflow"><span class="stage-dot"></span>MLflow</div>
+                </div>
+
+                <div class="monitoring-grid">
+                    <div class="chart-panel">
+                        <div class="panel-header"><h3>PSI Over Time</h3></div>
+                        <div class="chart-wrapper"><canvas id="psiTimeChart"></canvas></div>
+                    </div>
+                    <div class="chart-panel">
+                        <div class="panel-header"><h3>KL Divergence Over Time</h3></div>
+                        <div class="chart-wrapper"><canvas id="klTimeChart"></canvas></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ PAGE: ALERTS ═══ -->
+            <section id="page-alerts" class="page">
+                <div class="page-header-bar">
+                    <h2>Alert History</h2>
+                    <p>All triggered drift alerts with severity and status</p>
+                </div>
+                <div class="alert-filters">
+                    <select id="alert-severity-filter">
+                        <option value="">All Severities</option>
+                        <option value="critical">Critical</option>
+                        <option value="warning">Warning</option>
+                        <option value="info">Info</option>
+                    </select>
+                    <button id="alerts-refresh-btn" class="btn-secondary">Refresh</button>
+                </div>
+                <div class="table-card">
+                    <table id="alerts-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Feature</th>
+                                <th>Detector</th>
+                                <th>Score</th>
+                                <th>Threshold</th>
+                                <th>Severity</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alerts-tbody"></tbody>
+                    </table>
+                    <div class="empty-state" id="alerts-table-empty">
+                        <p>No alerts found</p>
+                    </div>
+                </div>
+                <div class="pagination" id="alerts-pagination">
+                    <button id="alerts-prev" class="btn-secondary" disabled>← Previous</button>
+                    <span id="alerts-page-info">Page 1</span>
+                    <button id="alerts-next" class="btn-secondary">Next →</button>
+                </div>
+            </section>
+
+            <!-- ═══ PAGE: SETTINGS ═══ -->
+            <section id="page-settings" class="page">
+                <div class="page-header-bar">
+                    <h2>Settings</h2>
+                    <p>Configure alert rules and system parameters</p>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Alert Rules</h3>
+                    <p class="section-desc">Define thresholds for drift detection alerts</p>
+                    <div class="table-card">
+                        <table id="rules-table">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Detector</th>
+                                    <th>Threshold</th>
+                                    <th>Severity</th>
+                                    <th>Active</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rules-tbody"></tbody>
+                        </table>
+                        <div class="empty-state" id="rules-empty">
+                            <p>No alert rules configured</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>System Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Model Version</span>
+                            <span class="info-value" id="sys-model-version">—</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Database</span>
+                            <span class="info-value" id="sys-db-status">—</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Redis</span>
+                            <span class="info-value" id="sys-redis-status">—</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Environment</span>
+                            <span class="info-value" id="sys-environment">—</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ PAGE: HELP ═══ -->
+            <section id="page-help" class="page">
+                <div class="page-header-bar">
+                    <h2>Help & Documentation</h2>
+                    <p>Guides, architecture overview, and troubleshooting</p>
+                </div>
+
+                <div class="help-grid">
+                    <div class="help-card">
+                        <h4>📊 Dashboard</h4>
+                        <p>The Dashboard page shows real-time drift metrics: PSI (Population Stability Index), KL Divergence, and MMD p-value across all monitored features. Bars are color-coded: <span style="color:#4ade80">green</span> = stable, <span style="color:#fb923c">orange</span> = warning, <span style="color:#f87171">red</span> = drifted.</p>
+                    </div>
+                    <div class="help-card">
+                        <h4>📦 Models</h4>
+                        <p>View all registered model versions and their baseline feature counts. Each model version has reference distributions registered for drift comparison.</p>
+                    </div>
+                    <div class="help-card">
+                        <h4>📡 Monitoring</h4>
+                        <p>Time-series charts show how PSI and KL scores evolve over time. The pipeline status shows real-time health of Kafka → Faust → Alert Engine → Airflow → MLflow.</p>
+                    </div>
+                    <div class="help-card">
+                        <h4>🔔 Alerts</h4>
+                        <p>Full history of drift alerts with severity badges. Filter by severity level. Alerts fire when drift scores exceed configured thresholds in the Settings page.</p>
+                    </div>
+                    <div class="help-card">
+                        <h4>⚙️ Settings</h4>
+                        <p>Configure alert rule thresholds for each detector type. Adjust when alerts fire by changing PSI, KL, or MMD thresholds and severity levels.</p>
+                    </div>
+                    <div class="help-card">
+                        <h4>🏗️ Architecture</h4>
+                        <p>The system uses a Faust stream processor to analyze tumbling windows of inference data against reference baselines. Three complementary detectors (KL, PSI, MMD) provide defence in depth. Alerts route to Slack/PagerDuty and optionally trigger Airflow retraining DAGs.</p>
+                    </div>
+                </div>
+
+                <div class="settings-section" style="margin-top:24px">
+                    <h3>Keyboard Shortcuts</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><span class="info-label">1</span><span class="info-value">Dashboard</span></div>
+                        <div class="info-item"><span class="info-label">2</span><span class="info-value">Models</span></div>
+                        <div class="info-item"><span class="info-label">3</span><span class="info-value">Monitoring</span></div>
+                        <div class="info-item"><span class="info-label">4</span><span class="info-value">Alerts</span></div>
+                        <div class="info-item"><span class="info-label">5</span><span class="info-value">Settings</span></div>
+                        <div class="info-item"><span class="info-label">6</span><span class="info-value">Help</span></div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
     <script src="/dashboard.js"></script>

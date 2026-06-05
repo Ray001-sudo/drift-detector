@@ -591,10 +591,32 @@ Modify these thresholds directly in the database or via the `load_baselines.py` 
 
 ## 13. Dashboard Guide
 
-The bespoke React/Chart.js dashboard is available at `/`.
-- View live ingestion rates and alert streams via WebSocket.
-- Review historical drift visualizations.
-- **Authentication:** Run `make create-admin` (which securely hashes using raw `bcrypt`) to create an admin user.
+The admin dashboard is a single-page application (SPA) built with vanilla JavaScript and Chart.js, served by the `drift-dashboard` FastAPI service. Access it at your deployment URL (e.g., `https://drift-dashboard-vth9.onrender.com/`).
+
+**Authentication:** Run `make create-admin` or `scripts/create_admin_non_interactive.py` to create an admin user with bcrypt-hashed credentials.
+
+### Pages
+
+| Page | URL Hash | Description |
+|------|----------|-------------|
+| **Dashboard** | `#dashboard` | Real-time overview with metric cards (Max PSI, MMD p-value, Total Features, Last Update), PSI and KL bar charts per feature, and a live alert feed. |
+| **Models** | `#models` | Table of all registered model versions showing baseline counts, last drift event time, and current drift status (Stable/Drifted). |
+| **Monitoring** | `#monitoring` | Time-series line charts for PSI and KL scores over time, grouped by feature. Pipeline health status (Kafka → Faust → Alert Engine → Airflow → MLflow). |
+| **Alerts** | `#alerts` | Full paginated alert history table with severity badges, score/threshold comparison, and resolution status. Filterable by severity. |
+| **Settings** | `#settings` | Live-editable alert rule thresholds and severity levels. System health information (database, Redis connectivity). |
+| **Help** | `#help` | Feature documentation, architecture overview, and keyboard shortcuts (press `1`–`6` to navigate). |
+
+### Sidebar Navigation
+
+The left sidebar provides navigation to all pages with icons, an active state highlight, and a live WebSocket connection indicator at the bottom.
+
+### Top Bar
+
+The top bar shows the current page title, a UTC clock, notification bell (with unresolved alert count), and the logged-in user's profile with a logout dropdown.
+
+### WebSocket Live Updates
+
+The dashboard maintains a persistent WebSocket connection to receive real-time drift scores and alerts. The connection automatically reconnects with exponential backoff if interrupted.
 
 ---
 
@@ -618,19 +640,37 @@ Since Render focuses on PaaS applications rather than observability stacks, Graf
 
 ---
 
-## 14.5. Removing Simulation Data for Production
+## 14.5. Removing Simulation / Demo Data for Production
 
-If you have executed `scripts/simulate_drift.py` or `scripts/populate_dummy_data.py` and want to wipe all synthetic mockup data before going live:
+> **⚠️ Important:** The scripts `scripts/simulate_drift.py` and `scripts/populate_dummy_data.py` insert synthetic mockup data into your database for demonstration purposes only. **You must remove this data before going to production.**
 
-1. Connect to your database using your preferred SQL client (e.g., DBeaver, `psql`).
-2. Truncate the tables holding event and alert data:
+### Steps to purge demo data
+
+1. Connect to your database using your preferred SQL client (e.g., DBeaver, `psql`, or the Neon Console SQL Editor).
+2. Run the following SQL commands to truncate all simulation data:
    ```sql
+   -- Remove all synthetic drift events and alerts
    TRUNCATE TABLE drift_score_events CASCADE;
    TRUNCATE TABLE alerts CASCADE;
-   -- Optionally, if you also want to remove test baselines:
+   TRUNCATE TABLE alert_rules CASCADE;
+
+   -- Optionally remove demo baselines (only if you loaded them via load_baselines.py)
    -- TRUNCATE TABLE feature_baselines CASCADE;
    ```
 3. Wait for the Faust processor windows to clear (typically 60 seconds) to ensure no residual synthetic data is pending in Kafka buffers.
+4. Your dashboard will now show empty states until real inference traffic begins flowing through the pipeline.
+
+### What stays vs. what gets removed
+
+| Table | Action | Reason |
+|-------|--------|--------|
+| `drift_score_events` | **TRUNCATE** | Contains synthetic drift events from demo scripts |
+| `alerts` | **TRUNCATE** | Contains synthetic alerts triggered by demo data |
+| `alert_rules` | **TRUNCATE** | Contains demo alert rules (recreate with production thresholds) |
+| `feature_baselines` | **Keep** (or truncate) | Keep if baselines were loaded from real training data |
+| `users` | **Keep** | Contains your admin user account |
+| `auth_attempts` | **Keep** | Contains login audit trail |
+| `audit_log` | **Keep** | Contains system audit trail |
 
 ---
 
