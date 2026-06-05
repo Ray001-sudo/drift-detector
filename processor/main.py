@@ -81,9 +81,12 @@ async def pre_create_leader_topic():
 
 
 # Run the topic creation at import time so it happens before Faust starts.
-# This is safe because the function catches all exceptions and doesn't
-# interfere with the Faust app loading.
+# After completion, explicitly set a new event loop for the main thread
+# so that Faust's table manager and other components can initialise.
 try:
     asyncio.run(pre_create_leader_topic())
 except Exception as e:
     print(f"Topic pre-creation failed (non-fatal): {e}")
+finally:
+    # Ensure there's a fresh event loop available for Faust
+    asyncio.set_event_loop(asyncio.new_event_loop())
