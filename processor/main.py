@@ -9,34 +9,35 @@ from common.config import settings
 
 broker_url = settings.KAFKA_BOOTSTRAP_SERVERS
 
-is_ssl = "SSL" in settings.KAFKA_SECURITY_PROTOCOL.upper()
+# 1. Build the SSL context with the bypass hacks
+ctx = None
+if settings.KAFKA_SASL_ENABLED and "SSL" in settings.KAFKA_SECURITY_PROTOCOL.upper():
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
 
-app_options = {
-    'id': 'drift-processor',
-    'broker': f"kafka://{broker_url}",
-    'store': 'rocksdb://',
-    'datadir': '/app/rocksdb_data',
-    'topic_partitions': 3,
-    'autodiscover': ['processor.agents'],
-}
-
+# 2. Build SASL Credentials with injected SSL context
+broker_credentials = None
 if settings.KAFKA_SASL_ENABLED:
-    sasl_kwargs = {
-        'username': settings.KAFKA_SASL_USERNAME,
-        'password': settings.KAFKA_SASL_PASSWORD,
-        'mechanism': settings.KAFKA_SASL_MECHANISM
-    }
-    if is_ssl:
-        context = ssl.create_default_context()
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_NONE
-        sasl_kwargs['ssl_context'] = context
+    broker_credentials = faust.SASLCredentials(
+        username=settings.KAFKA_SASL_USERNAME,
+        password=settings.KAFKA_SASL_PASSWORD,
+        mechanism=settings.KAFKA_SASL_MECHANISM or "PLAIN",
+        ssl_context=ctx
+    )
 
-    app_options['broker_credentials'] = faust.SASLCredentials(**sasl_kwargs)
+# 3. Initialize the Faust App
+app = faust.App(
+    'drift-processor',
+    broker=f"kafka://{broker_url}",
+    broker_credentials=broker_credentials,
+    datadir='/app/rocksdb_data',
+    topic_allow_declare=False,         # Crucial: prevents Aiven admin firewall drops
+    topic_partitions=3,
+    autodiscover=['processor.agents']
+)
 
-app = faust.App(**app_options)
-
-# Force leader election off – this must be set directly on the config object
+# 4. Final configuration overrides
 app.conf.leader_election = False
 
 def main() -> None:
