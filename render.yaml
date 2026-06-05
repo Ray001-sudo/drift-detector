@@ -125,3 +125,6 @@ services:
   - type: redis
     name: drift-redis
     plan: free
+    ipAllowList:
+      - cidr: 0.0.0.0/0
+        description: Allow traffic from anywhere
