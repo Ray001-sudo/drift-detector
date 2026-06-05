@@ -18,12 +18,11 @@ logger = logging.getLogger(__name__)
 
 broker_url = settings.KAFKA_BOOTSTRAP_SERVERS
 
-# 1. Build the SSL context first
+# 1. Build the STANDARD, secure SSL context
 ctx = None
 if settings.KAFKA_SASL_ENABLED and "SSL" in settings.KAFKA_SECURITY_PROTOCOL:
     ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+    # Removed the `check_hostname = False` hacks! Aiven requires standard SNI routing.
 
 # 2. Build the SASL Credentials and inject the SSL context directly inside it
 broker_credentials = None
@@ -32,7 +31,7 @@ if settings.KAFKA_SASL_ENABLED:
         username=settings.KAFKA_SASL_USERNAME,
         password=settings.KAFKA_SASL_PASSWORD,
         mechanism=settings.KAFKA_SASL_MECHANISM or "PLAIN",
-        ssl_context=ctx  # <-- THIS officially triggers Faust's internal switch to SASL_SSL!
+        ssl_context=ctx
     )
 
 # 3. Initialize the Faust App cleanly
