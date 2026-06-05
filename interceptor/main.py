@@ -32,7 +32,7 @@ app.add_middleware(
 
 class InferenceRequest(BaseModel):
     request_id: str
-    features: Dict[str, float]
+    features: dict[str, float]
 
 @app.post("/api/v1/inference")
 async def predict(request: InferenceRequest) -> Dict[str, Any]:
