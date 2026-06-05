@@ -1,6 +1,8 @@
 import sys
 import os
 import ssl
+import asyncio
+from aiokafka.admin import AIOKafkaAdminClient, NewTopic
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -41,8 +43,47 @@ if settings.KAFKA_SASL_ENABLED:
 
 app = faust.App(**app_options)
 
+
+async def pre_create_leader_topic():
+    """Create the Faust leader topic if it doesn't exist, to avoid connection errors."""
+    config = {
+        "bootstrap_servers": settings.KAFKA_BOOTSTRAP_SERVERS,
+        "request_timeout_ms": 10000,
+    }
+    if settings.KAFKA_SASL_ENABLED:
+        config.update({
+            "security_protocol": settings.KAFKA_SECURITY_PROTOCOL,
+            "sasl_mechanism": settings.KAFKA_SASL_MECHANISM,
+            "sasl_plain_username": settings.KAFKA_SASL_USERNAME,
+            "sasl_plain_password": settings.KAFKA_SASL_PASSWORD,
+        })
+        if is_ssl:
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            config["ssl_context"] = ctx
+
+    admin = AIOKafkaAdminClient(**config)
+    await admin.start()
+    try:
+        topic = NewTopic(
+            name="drift-processor-__assignor-__leader",
+            num_partitions=1,
+            replication_factor=3,          # adjust to your Aiven cluster setting
+        )
+        await admin.create_topics([topic])
+        print("Pre-created leader topic successfully.")
+    except Exception as e:
+        # Topic may already exist; that's fine
+        print(f"Leader topic creation note: {e}")
+    finally:
+        await admin.close()
+
+
 def main() -> None:
+    asyncio.run(pre_create_leader_topic())
     app.main()
+
 
 if __name__ == '__main__':
     main()
