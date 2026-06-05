@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: drift-config
+  namespace: drift-system
+data:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.kafka-system.svc.cluster.local:9092"
+  KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+  KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
+  KAFKA_SASL_ENABLED: "true"
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  CIRCUIT_BREAKER_SERVICE_NAME: "drift_interceptor"
+  ALLOWED_ORIGINS: "https://drift.mycompany.com"

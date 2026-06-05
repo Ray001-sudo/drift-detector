@@ -1,0 +1,17 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.mypy_cache/
+venv/
+env/
+.idea/
+.vscode/
+data/baselines/*.csv
+!data/baselines/age.csv
+!data/baselines/income.csv
+!data/baselines/credit_score.csv
+!data/baselines/tenure.csv
+rocksdb_data/
+alembic/versions/__pycache__/

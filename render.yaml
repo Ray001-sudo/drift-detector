@@ -1,0 +1,111 @@
+# Render Blueprint Configuration (render.yaml)
+# Read more at https://render.com/docs/blueprint-spec
+
+services:
+  # ---------------------------------------------------------
+  # Core Streaming API Proxy
+  # ---------------------------------------------------------
+  - type: web
+    name: drift-interceptor
+    env: docker
+    dockerfilePath: ./interceptor/Dockerfile
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false  
+      - key: KAFKA_BOOTSTRAP_SERVERS
+        sync: false
+      - key: KAFKA_SASL_ENABLED
+        value: "true"
+      - key: KAFKA_SASL_USERNAME
+        sync: false
+      - key: KAFKA_SASL_PASSWORD
+        sync: false
+      - key: KAFKA_SECURITY_PROTOCOL
+        value: "SASL_SSL"
+      - key: KAFKA_SASL_MECHANISM
+        value: "PLAIN"
+
+  # ---------------------------------------------------------
+  # Faust Stream Processor
+  # ---------------------------------------------------------
+  - type: web
+    name: drift-processor
+    env: docker
+    dockerfilePath: ./processor/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: KAFKA_BOOTSTRAP_SERVERS
+        sync: false
+      - key: KAFKA_SASL_ENABLED
+        value: "true"
+      - key: KAFKA_SASL_USERNAME
+        sync: false
+      - key: KAFKA_SASL_PASSWORD
+        sync: false
+      - key: KAFKA_SECURITY_PROTOCOL
+        value: "SASL_SSL"
+      - key: KAFKA_SASL_MECHANISM
+        value: "PLAIN"
+
+  # ---------------------------------------------------------
+  # Alert Engine
+  # ---------------------------------------------------------
+  - type: web
+    name: drift-alerter
+    env: docker
+    dockerfilePath: ./alerting/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false  
+      - key: KAFKA_BOOTSTRAP_SERVERS
+        sync: false
+      - key: KAFKA_SASL_ENABLED
+        value: "true"
+      - key: KAFKA_SASL_USERNAME
+        sync: false
+      - key: KAFKA_SASL_PASSWORD
+        sync: false
+      - key: KAFKA_SECURITY_PROTOCOL
+        value: "SASL_SSL"
+      - key: KAFKA_SASL_MECHANISM
+        value: "PLAIN"
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+
+  # ---------------------------------------------------------
+  # Live WebSocket Dashboard
+  # ---------------------------------------------------------
+  - type: web
+    name: drift-dashboard
+    env: docker
+    dockerfilePath: ./dashboard/Dockerfile
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false  
+      - key: KAFKA_BOOTSTRAP_SERVERS
+        sync: false
+      - key: KAFKA_SASL_ENABLED
+        value: "true"
+      - key: KAFKA_SASL_USERNAME
+        sync: false
+      - key: KAFKA_SASL_PASSWORD
+        sync: false
+      - key: KAFKA_SECURITY_PROTOCOL
+        value: "SASL_SSL"
+      - key: KAFKA_SASL_MECHANISM
+        value: "PLAIN"
+      - key: JWT_SECRET_KEY
+        generateValue: true

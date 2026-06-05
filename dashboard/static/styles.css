@@ -1,0 +1,177 @@
+:root {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --accent: #4caf50;
+    --warning: #ff9800;
+    --critical: #f44336;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+}
+
+#login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+#login-container input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    background: #333;
+    border: 1px solid #444;
+    color: white;
+    box-sizing: border-box;
+}
+
+#login-container button {
+    width: 100%;
+    padding: 10px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.dot {
+    height: 12px;
+    width: 12px;
+    background-color: red;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot.connected {
+    background-color: var(--accent);
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #888;
+}
+
+.card .value {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.pipeline-status {
+    display: flex;
+    justify-content: space-between;
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.stage {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: #333;
+    color: #888;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.stage.active {
+    background: var(--accent);
+    color: white;
+}
+
+.stage.firing {
+    background: var(--critical);
+    color: white;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.chart-container {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 8px;
+    height: 300px;
+}
+
+.alert-log-container {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 8px;
+    height: 200px;
+    overflow-y: auto;
+}
+
+ul#alert-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul#alert-list li {
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+}
+
+.badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge.warning { background: var(--warning); color: black; }
+.badge.critical { background: var(--critical); color: white; }
+
+#logout-btn {
+    background: transparent;
+    border: 1px solid #666;
+    color: #ccc;
+    padding: 5px 10px;
+    cursor: pointer;
+}

@@ -1,0 +1,16 @@
+pytest==8.0.0
+pytest-asyncio==0.23.4
+pytest-cov==4.1.0
+pytest-postgresql==6.0.0
+factory-boy==3.3.0
+testcontainers[kafka]==3.7.1
+black==24.1.1
+isort==5.13.2
+flake8==7.0.0
+mypy==1.8.0
+bandit==1.7.7
+pip-audit==2.7.0
+safety==3.0.0
+types-redis==4.6.0.20240106
+types-passlib==1.7.7.20240106
+types-PyYAML==6.0.12.12
