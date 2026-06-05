@@ -1,5 +1,5 @@
 import json
-import ssl  # Added native SSL utility module
+import ssl
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer # type: ignore
 from common.config import settings
 from typing import Any
@@ -20,9 +20,12 @@ def get_kafka_producer() -> AIOKafkaProducer:
             "sasl_plain_password": settings.KAFKA_SASL_PASSWORD,
         })
         
-        # Inject default certificate processing context for SASL_SSL or SSL connections
+        # Inject certificate processing context for SASL_SSL or SSL connections
         if "SSL" in settings.KAFKA_SECURITY_PROTOCOL:
-            config["ssl_context"] = ssl.create_default_context()
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            config["ssl_context"] = context
         
     return AIOKafkaProducer(**config)
 
@@ -43,8 +46,11 @@ def get_kafka_consumer(topic: str, group_id: str) -> AIOKafkaConsumer:
             "sasl_plain_password": settings.KAFKA_SASL_PASSWORD,
         })
         
-        # Inject default certificate processing context for SASL_SSL or SSL connections
+        # Inject certificate processing context for SASL_SSL or SSL connections
         if "SSL" in settings.KAFKA_SECURITY_PROTOCOL:
-            config["ssl_context"] = ssl.create_default_context()
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            config["ssl_context"] = context
         
     return AIOKafkaConsumer(topic, **config)
