@@ -26,12 +26,11 @@ app_options = {
 }
 
 if settings.KAFKA_SASL_ENABLED:
-    # 2. Build the kwargs for SASLCredentials
+    # 2. Build the kwargs for SASLCredentials (NO 'protocol' argument)
     sasl_kwargs = {
         'username': settings.KAFKA_SASL_USERNAME,
         'password': settings.KAFKA_SASL_PASSWORD,
-        'mechanism': settings.KAFKA_SASL_MECHANISM,
-        'protocol': settings.KAFKA_SECURITY_PROTOCOL # Usually 'SASL_SSL' or 'SASL_PLAINTEXT'
+        'mechanism': settings.KAFKA_SASL_MECHANISM
     }
     
     # 3. If SSL is required, create the context and attach it directly to the credentials
@@ -42,7 +41,7 @@ if settings.KAFKA_SASL_ENABLED:
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
         
-        # This is the actual secret sauce: putting it inside SASLCredentials
+        # Inject SSL directly into SASLCredentials
         sasl_kwargs['ssl_context'] = context
 
     # Unpack the kwargs into the Faust credentials object
