@@ -11,14 +11,12 @@ services:
     dockerfilePath: ./interceptor/Dockerfile
     plan: starter
     healthCheckPath: /api/v1/health
+    ipAllowList: [] # Opens this web service to the public internet
     envVars:
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: drift-redis
-          property: connectionString
+        placeholder: Paste your existing Internal Redis URL here
       - key: KAFKA_BOOTSTRAP_SERVERS
         sync: false
       - key: KAFKA_SASL_ENABLED
@@ -68,10 +66,7 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: drift-redis
-          property: connectionString
+        placeholder: Paste your existing Internal Redis URL here
       - key: KAFKA_BOOTSTRAP_SERVERS
         sync: false
       - key: KAFKA_SASL_ENABLED
@@ -96,14 +91,12 @@ services:
     dockerfilePath: ./dashboard/Dockerfile
     plan: starter
     healthCheckPath: /api/v1/health
+    ipAllowList: [] # Opens this web service to the public internet
     envVars:
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: drift-redis
-          property: connectionString
+        placeholder: Paste your existing Internal Redis URL here
       - key: KAFKA_BOOTSTRAP_SERVERS
         sync: false
       - key: KAFKA_SASL_ENABLED
@@ -118,10 +111,3 @@ services:
         value: "PLAIN"
       - key: JWT_SECRET_KEY
         generateValue: true
-
-  # ---------------------------------------------------------
-  # Managed Redis Cache
-  # ---------------------------------------------------------
-  - type: redis
-    name: drift-redis
-    plan: free
