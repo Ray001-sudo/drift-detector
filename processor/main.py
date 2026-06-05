@@ -11,14 +11,14 @@ from common.config import settings
 
 broker_url = settings.KAFKA_BOOTSTRAP_SERVERS
 
-# 1. Update the scheme dynamically based on the security protocol
+# 1. Determine if SSL is needed, but DO NOT change the broker scheme
 is_ssl = "SSL" in settings.KAFKA_SECURITY_PROTOCOL.upper()
-broker_scheme = "kafka+ssl" if is_ssl else "kafka"
 
 # Setup base application options
 app_options = {
     'id': 'drift-processor',
-    'broker': f"{broker_scheme}://{broker_url}",
+    # ALWAYS use 'kafka://', Faust will handle SSL via the credentials object
+    'broker': f"kafka://{broker_url}", 
     'store': 'rocksdb://',
     'datadir': '/app/rocksdb_data',
     'topic_partitions': 3,
@@ -26,18 +26,16 @@ app_options = {
 }
 
 if settings.KAFKA_SASL_ENABLED:
-    # 2. Build the kwargs for SASLCredentials (NO 'protocol' argument)
+    # 2. Build the kwargs for SASLCredentials
     sasl_kwargs = {
         'username': settings.KAFKA_SASL_USERNAME,
         'password': settings.KAFKA_SASL_PASSWORD,
         'mechanism': settings.KAFKA_SASL_MECHANISM
     }
     
-    # 3. If SSL is required, create the context and attach it directly to the credentials
+    # 3. If SSL is required, create the context and attach it directly
     if is_ssl:
         context = ssl.create_default_context()
-        # Note: Disabling hostname checks/verification is fine for testing, 
-        # but in production against Aiven, you should ideally verify certificates.
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
         
