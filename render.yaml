@@ -125,4 +125,3 @@ services:
   - type: redis
     name: drift-redis
     plan: free
-    maxMemoryPolicy: allkeys-lru
