@@ -35,6 +35,7 @@ app = faust.App(
     broker_credentials=broker_credentials,
     broker_client_with_ssl=extra_broker_params,  # Injects our customized SSL context map
     store='rocksdb://',
+    datadir='/app/rocksdb_data',  # Overrides default data directory to prevent Permission Errors
     topic_partitions=3,
     autodiscover=['processor.agents']
 )
