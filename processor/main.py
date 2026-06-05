@@ -18,9 +18,6 @@ app_options = {
     'datadir': '/app/rocksdb_data',
     'topic_partitions': 3,
     'autodiscover': ['processor.agents'],
-    # Disable leader election – single worker doesn't need it,
-    # and this avoids the broker‑connectivity issue during topic creation.
-    'leader_election': False,
 }
 
 if settings.KAFKA_SASL_ENABLED:
@@ -38,6 +35,9 @@ if settings.KAFKA_SASL_ENABLED:
     app_options['broker_credentials'] = faust.SASLCredentials(**sasl_kwargs)
 
 app = faust.App(**app_options)
+
+# Force leader election off – this must be set directly on the config object
+app.conf.leader_election = False
 
 def main() -> None:
     app.main()
