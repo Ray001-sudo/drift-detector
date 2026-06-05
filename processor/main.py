@@ -40,7 +40,10 @@ app = faust.App(
 # 4. Final configuration overrides
 app.conf.leader_election = False
 
+from common.bootstrap import run_bootstrap
+
 def main() -> None:
+    run_bootstrap()
     app.main()
 
 if __name__ == '__main__':
