@@ -18,13 +18,15 @@ logger = logging.getLogger(__name__)
 
 broker_url = settings.KAFKA_BOOTSTRAP_SERVERS
 
-# 1. Build the STANDARD, secure SSL context
+# 1. Build the SSL context and PUT BACK the bypass hacks.
+# The container lacks the CA bundle, so we absolutely need this to connect to Aiven.
 ctx = None
 if settings.KAFKA_SASL_ENABLED and "SSL" in settings.KAFKA_SECURITY_PROTOCOL:
     ctx = ssl.create_default_context()
-    # Removed the `check_hostname = False` hacks! Aiven requires standard SNI routing.
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
 
-# 2. Build the SASL Credentials and inject the SSL context directly inside it
+# 2. Build the SASL Credentials and inject the SSL context
 broker_credentials = None
 if settings.KAFKA_SASL_ENABLED:
     broker_credentials = faust.SASLCredentials(
@@ -39,7 +41,8 @@ app = faust.App(
     'drift-alerter',
     broker=f"kafka://{broker_url}",
     broker_credentials=broker_credentials,
-    datadir='/tmp/drift-alerter-data' 
+    datadir='/tmp/drift-alerter-data',
+    topic_allow_declare=False  # <-- THE MAGIC FIX: Stops Aiven from dropping the connection!
 )
 
 scores_topic = app.topic('drift.scores', value_type=dict)
