@@ -1,3 +1,4 @@
+import ssl
 import faust
 import logging
 from typing import Dict, Any
@@ -16,22 +17,28 @@ import json
 logger = logging.getLogger(__name__)
 
 broker_url = settings.KAFKA_BOOTSTRAP_SERVERS
-if settings.KAFKA_SASL_ENABLED:
-    import ssl
-    broker_credentials = faust.SASLCredentials(
-        username=settings.KAFKA_SASL_USERNAME,
-        password=settings.KAFKA_SASL_PASSWORD,
-        mechanism=settings.KAFKA_SASL_MECHANISM,
-        protocol=settings.KAFKA_SECURITY_PROTOCOL.lower()
-    )
-else:
-    broker_credentials = None
 
+# 1. Initialize the Faust App cleanly
 app = faust.App(
     'drift-alerter',
     broker=f"kafka://{broker_url}",
-    broker_credentials=broker_credentials,
 )
+
+# 2. Directly mutate the configuration state to force SASL_SSL
+if settings.KAFKA_SASL_ENABLED:
+    app.conf.broker_credentials = faust.SASLCredentials(
+        username=settings.KAFKA_SASL_USERNAME,
+        password=settings.KAFKA_SASL_PASSWORD,
+        mechanism=settings.KAFKA_SASL_MECHANISM
+    )
+    
+    if "SSL" in settings.KAFKA_SECURITY_PROTOCOL:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        
+        # Lock the SSL context directly into the config state
+        app.conf.ssl_context = ctx
 
 scores_topic = app.topic('drift.scores', value_type=dict)
 alerts_topic = app.topic('drift.alerts', value_type=dict)
