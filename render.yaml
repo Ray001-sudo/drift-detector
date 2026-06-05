@@ -9,9 +9,8 @@ services:
     name: drift-interceptor
     env: docker
     dockerfilePath: ./interceptor/Dockerfile
-    plan: free # Changed to free
+    plan: free
     healthCheckPath: /api/v1/health
-    ipAllowList: [] 
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -33,11 +32,11 @@ services:
   # ---------------------------------------------------------
   # Faust Stream Processor
   # ---------------------------------------------------------
-  - type: web # Changed to web because worker isn't supported on free
+  - type: web
     name: drift-processor
     env: docker
     dockerfilePath: ./processor/Dockerfile
-    plan: free # Changed to free
+    plan: free
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -57,11 +56,11 @@ services:
   # ---------------------------------------------------------
   # Alert Engine
   # ---------------------------------------------------------
-  - type: web # Changed to web because worker isn't supported on free
+  - type: web
     name: drift-alerter
     env: docker
     dockerfilePath: ./alerting/Dockerfile
-    plan: free # Changed to free
+    plan: free
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -89,9 +88,8 @@ services:
     name: drift-dashboard
     env: docker
     dockerfilePath: ./dashboard/Dockerfile
-    plan: free # Changed to free
+    plan: free
     healthCheckPath: /api/v1/health
-    ipAllowList: [] 
     envVars:
       - key: DATABASE_URL
         sync: false
