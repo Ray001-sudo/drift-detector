@@ -8,8 +8,7 @@ def get_kafka_producer() -> AIOKafkaProducer:
         "bootstrap_servers": settings.KAFKA_BOOTSTRAP_SERVERS,
         "value_serializer": lambda v: json.dumps(v).encode("utf-8"),
         "acks": "all",
-        "retries": 3,
-        "retry_backoff_ms": 100,
+        "retry_backoff_ms": 100, # Removed "retries": 3
     }
     
     if settings.KAFKA_SASL_ENABLED:
