@@ -80,10 +80,10 @@ async def pre_create_leader_topic():
         await admin.close()
 
 
-def main() -> None:
+# Run the topic creation at import time so it happens before Faust starts.
+# This is safe because the function catches all exceptions and doesn't
+# interfere with the Faust app loading.
+try:
     asyncio.run(pre_create_leader_topic())
-    app.main()
-
-
-if __name__ == '__main__':
-    main()
+except Exception as e:
+    print(f"Topic pre-creation failed (non-fatal): {e}")
