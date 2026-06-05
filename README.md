@@ -620,13 +620,13 @@ Since Render focuses on PaaS applications rather than observability stacks, Graf
 
 ## 14.5. Removing Simulation Data for Production
 
-If you have executed `scripts/simulate_drift.py` and want to wipe all synthetic simulation data before going live:
+If you have executed `scripts/simulate_drift.py` or `scripts/populate_dummy_data.py` and want to wipe all synthetic mockup data before going live:
 
 1. Connect to your database using your preferred SQL client (e.g., DBeaver, `psql`).
 2. Truncate the tables holding event and alert data:
    ```sql
-   TRUNCATE TABLE drift_events CASCADE;
-   TRUNCATE TABLE drift_alerts CASCADE;
+   TRUNCATE TABLE drift_score_events CASCADE;
+   TRUNCATE TABLE alerts CASCADE;
    -- Optionally, if you also want to remove test baselines:
    -- TRUNCATE TABLE feature_baselines CASCADE;
    ```
