@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime
 from typing import Dict, List, Any
 from processor.main import app
-from reference_store.store import store as ref_store
+from processor.reference_store.store import store as ref_store
 from detectors.kl_divergence import KLDivergenceDetector
 from detectors.psi import PSIDetector
 from detectors.mmd import MMDDetector
