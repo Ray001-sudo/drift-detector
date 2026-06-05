@@ -9,14 +9,14 @@ services:
     name: drift-interceptor
     env: docker
     dockerfilePath: ./interceptor/Dockerfile
-    plan: starter
+    plan: free # Changed to free
     healthCheckPath: /api/v1/health
-    ipAllowList: [] # Opens this web service to the public internet
+    ipAllowList: [] 
     envVars:
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
-        sync: false  # You will paste your internal Redis URL in the dashboard
+        sync: false  
       - key: KAFKA_BOOTSTRAP_SERVERS
         sync: false
       - key: KAFKA_SASL_ENABLED
@@ -33,11 +33,11 @@ services:
   # ---------------------------------------------------------
   # Faust Stream Processor
   # ---------------------------------------------------------
-  - type: worker
+  - type: web # Changed to web because worker isn't supported on free
     name: drift-processor
     env: docker
     dockerfilePath: ./processor/Dockerfile
-    plan: free
+    plan: free # Changed to free
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -57,16 +57,16 @@ services:
   # ---------------------------------------------------------
   # Alert Engine
   # ---------------------------------------------------------
-  - type: worker
+  - type: web # Changed to web because worker isn't supported on free
     name: drift-alerter
     env: docker
     dockerfilePath: ./alerting/Dockerfile
-    plan: starter
+    plan: free # Changed to free
     envVars:
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
-        sync: false  # You will paste your internal Redis URL in the dashboard
+        sync: false  
       - key: KAFKA_BOOTSTRAP_SERVERS
         sync: false
       - key: KAFKA_SASL_ENABLED
@@ -89,14 +89,14 @@ services:
     name: drift-dashboard
     env: docker
     dockerfilePath: ./dashboard/Dockerfile
-    plan: starter
+    plan: free # Changed to free
     healthCheckPath: /api/v1/health
-    ipAllowList: [] # Opens this web service to the public internet
+    ipAllowList: [] 
     envVars:
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
-        sync: false  # You will paste your internal Redis URL in the dashboard
+        sync: false  
       - key: KAFKA_BOOTSTRAP_SERVERS
         sync: false
       - key: KAFKA_SASL_ENABLED
