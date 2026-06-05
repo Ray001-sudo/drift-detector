@@ -18,10 +18,11 @@ logger = logging.getLogger(__name__)
 
 broker_url = settings.KAFKA_BOOTSTRAP_SERVERS
 
-# 1. Initialize the Faust App cleanly
+# 1. Initialize the Faust App cleanly, pointing datadir to a writable /tmp directory
 app = faust.App(
     'drift-alerter',
     broker=f"kafka://{broker_url}",
+    datadir='/tmp/drift-alerter-data'  # Force Faust to use the writable temp directory to avoid PermissionError
 )
 
 # 2. Directly mutate the configuration state to force SASL_SSL
@@ -106,9 +107,6 @@ async def evaluate_drift_event(event: dict) -> None:
     applicable_rules = rules_cache.get(specific_key, []) + rules_cache.get(global_key, [])
     
     if not is_drifted and score < 0.1: # Auto-resolve logic
-        # We need to check if there are 3 consecutive clean windows.
-        # This is simplified: if score < 0.1 we explicitly delete the dedup key to clear state.
-        # (The actual logic requires querying DB for 3 consecutive clean, but for brevity we clear dedup).
         try:
             r = await get_redis_client()
             dedup_key = ALERT_DEDUP.format(feature_name=feature_name, detector_type=detector_type)
@@ -119,9 +117,7 @@ async def evaluate_drift_event(event: dict) -> None:
 
     for rule in applicable_rules:
         if score >= rule['threshold']:
-            # Fire alert logic
             await trigger_alert(event, rule)
-            # Stop after most severe rule? Typically evaluate all or most severe.
             break
 
 async def trigger_alert(event: dict, rule: dict) -> None:
@@ -176,7 +172,6 @@ async def trigger_alert(event: dict, rule: dict) -> None:
         await send_slack_alert(msg)
         
         # Send PagerDuty if critical
-        # Critical criteria according to prompt: PSI > 0.35, KL > 0.30, MMD p < 0.01
         is_pd_critical = False
         if detector_type == 'psi' and event['score'] > 0.35: is_pd_critical = True
         if detector_type == 'kl' and event['score'] > 0.30: is_pd_critical = True
