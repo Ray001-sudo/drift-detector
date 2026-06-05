@@ -9,7 +9,16 @@ from datetime import timedelta
 from common.config import settings
 
 broker_url = settings.KAFKA_BOOTSTRAP_SERVERS
-ssl_context = None
+
+# Setup base application options
+app_options = {
+    'id': 'drift-processor',
+    'broker': f"kafka://{broker_url}",
+    'store': 'rocksdb://',
+    'datadir': '/app/rocksdb_data',
+    'topic_partitions': 3,
+    'autodiscover': ['processor.agents']
+}
 
 if settings.KAFKA_SASL_ENABLED:
     broker_credentials = faust.SASLCredentials(
@@ -17,24 +26,21 @@ if settings.KAFKA_SASL_ENABLED:
         password=settings.KAFKA_SASL_PASSWORD,
         mechanism=settings.KAFKA_SASL_MECHANISM
     )
+    app_options['broker_credentials'] = broker_credentials
     
     if "SSL" in settings.KAFKA_SECURITY_PROTOCOL:
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
-else:
-    broker_credentials = None
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        
+        # This is the secret sauce: explicitly override both consumer and producer parameters
+        # inside Faust's underlying mapping parameters to lock SSL active.
+        app_options['broker_client_with_ssl'] = {
+            'ssl_context': context
+        }
 
-app = faust.App(
-    'drift-processor',
-    broker=f"kafka://{broker_url}",
-    broker_credentials=broker_credentials,
-    ssl_context=ssl_context,  # Passed directly to App so SASL layer inherits encryption
-    store='rocksdb://',
-    datadir='/app/rocksdb_data',
-    topic_partitions=3,
-    autodiscover=['processor.agents']
-)
+# Initialize the Faust App with our unified configuration bundle
+app = faust.App(**app_options)
 
 def main() -> None:
     app.main()
