@@ -6,7 +6,7 @@
 [![Docker](https://img.shields.io/badge/docker-compose-2496ED.svg)](docker-compose.yml)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-ready-326CE5.svg)](k8s/)
 
-> **Live Demo:** [https://yourdomain.com](https://yourdomain.com) &nbsp;|&nbsp; **Grafana:** [https://yourdomain.com:3000](https://yourdomain.com:3000)
+> **Live Demo:** [https://drift-dashboard-vth9.onrender.com/](https://drift-dashboard-vth9.onrender.com/) &nbsp;|&nbsp; **Grafana:** [http://localhost:3000](http://localhost:3000)
 
 ![Dashboard Screenshot](docs/screenshots/grafana-drift-event.png)
 *Live dashboard showing a drift event propagating through the pipeline — PSI score on the `age` feature climbing through the 0.20 threshold, triggering automatic retraining.*
