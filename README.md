@@ -605,6 +605,33 @@ Grafana is provisioned natively via `drift.json`.
 - Tracks `KL divergence`, `PSI`, `MMD p-value`.
 - Tracks system telemetry: `drift_interceptor_requests_total`, Kafka lag, Postgres connections.
 
+### How to access Grafana and point it at your live data (Render/Cloud Deployments)
+
+Since Render focuses on PaaS applications rather than observability stacks, Grafana is not included in the `render.yaml` blueprint. To monitor your live Render database locally:
+
+1. Ensure your `.env` contains your live `DATABASE_URL`, `REDIS_URL`, and `GRAFANA_ADMIN_PASSWORD`.
+2. Start only the monitoring and exporter stack using Docker Compose:
+   ```bash
+   docker compose up prometheus grafana postgres-exporter redis-exporter -d
+   ```
+3. Open your browser to `http://localhost:3000` and log in with username `admin` and your configured password. Grafana will automatically scrape the remote Neon PostgreSQL metrics via the local exporters!
+
+---
+
+## 14.5. Removing Simulation Data for Production
+
+If you have executed `scripts/simulate_drift.py` and want to wipe all synthetic simulation data before going live:
+
+1. Connect to your database using your preferred SQL client (e.g., DBeaver, `psql`).
+2. Truncate the tables holding event and alert data:
+   ```sql
+   TRUNCATE TABLE drift_events CASCADE;
+   TRUNCATE TABLE drift_alerts CASCADE;
+   -- Optionally, if you also want to remove test baselines:
+   -- TRUNCATE TABLE feature_baselines CASCADE;
+   ```
+3. Wait for the Faust processor windows to clear (typically 60 seconds) to ensure no residual synthetic data is pending in Kafka buffers.
+
 ---
 
 ## 15. Redis Key Reference
