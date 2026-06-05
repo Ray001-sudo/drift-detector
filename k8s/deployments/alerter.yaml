@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drift-alerter
+  namespace: drift-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: drift-alerter
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: drift-alerter
+    spec:
+      securityContext:
+        runAsUser: 1001
+        runAsNonRoot: true
+      containers:
+      - name: alerter
+        image: myregistry.com/drift-alerter:latest
+        envFrom:
+        - configMapRef:
+            name: drift-config
+        - secretRef:
+            name: drift-secrets
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi

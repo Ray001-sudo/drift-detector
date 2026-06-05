@@ -1,0 +1,21 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: drift-interceptor-pdb
+  namespace: drift-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: drift-interceptor
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: drift-processor-pdb
+  namespace: drift-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: drift-processor

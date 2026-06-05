@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drift Detection Dashboard</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+    <div id="login-container">
+        <h2>Drift Detection System</h2>
+        <form id="login-form">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <div id="login-error" style="color: red; display: none;">Login failed</div>
+    </div>
+
+    <div id="dashboard-container" style="display: none;">
+        <header>
+            <h1>ML Drift Dashboard</h1>
+            <div class="status-bar">
+                <span class="dot" id="live-dot"></span> Live
+                <span id="req-min">0</span> req/min
+                <span id="utc-time"></span>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <div class="metrics-grid">
+            <div class="card">
+                <h3>Features Monitored</h3>
+                <div class="value" id="features-monitored">0</div>
+            </div>
+            <div class="card">
+                <h3>Max PSI</h3>
+                <div class="value" id="max-psi">0.00</div>
+            </div>
+            <div class="card">
+                <h3>Max KL</h3>
+                <div class="value" id="max-kl">0.00</div>
+            </div>
+            <div class="card">
+                <h3>MMD p-value</h3>
+                <div class="value" id="mmd-pvalue">1.00</div>
+            </div>
+        </div>
+
+        <div class="pipeline-status">
+            <div class="stage" id="stage-kafka">Kafka</div>
+            <div class="stage" id="stage-faust">Faust</div>
+            <div class="stage" id="stage-alert">Alert</div>
+            <div class="stage" id="stage-airflow">Airflow</div>
+            <div class="stage" id="stage-mlflow">MLflow</div>
+        </div>
+
+        <div id="retrain-banner" style="display:none; background:#ffeb3b; padding:10px; text-align:center; color:black; font-weight:bold; margin-bottom: 20px; border-radius: 4px;">
+            Auto-retrain triggered via Airflow DAG!
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-container">
+                <canvas id="psiChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="klChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="psiTimeChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="distChart"></canvas>
+            </div>
+        </div>
+
+        <div class="alert-log-container">
+            <h3>Recent Alerts</h3>
+            <ul id="alert-list"></ul>
+        </div>
+    </div>
+
+    <script src="/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Local overrides for docker-compose
+version: '3.8'
+
+services:
+  drift-dashboard:
+    # Use standard 8000 port locally instead of 443 
+    # to avoid sudo on linux/mac for port binding if needed
+    ports:
+      - "443:443"

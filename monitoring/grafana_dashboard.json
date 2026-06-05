@@ -1,0 +1,283 @@
+{
+  "title": "ML Drift Detection — Operations",
+  "uid": "drift-ops-v1",
+  "tags": ["drift", "mlops", "production"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "schemaVersion": 36,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Active WebSocket connections",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [{"expr": "active_websocket_connections"}],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 40},
+              {"color": "red", "value": 50}
+            ]
+          }
+        }
+      },
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4}
+    },
+    {
+      "type": "stat",
+      "title": "Inference features published (5m rate)",
+      "description": "total features published in last 5 minutes",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [{"expr": "rate(inference_features_published_total[5m]) * 300"}],
+      "fieldConfig": {"defaults": {"unit": "short"}},
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4}
+    },
+    {
+      "type": "stat",
+      "title": "Alerts fired today",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [{"expr": "increase(drift_alerts_fired_total[24h])"}],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 5},
+              {"color": "red", "value": 20}
+            ]
+          }
+        }
+      },
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4}
+    },
+    {
+      "type": "stat",
+      "title": "Auto-registered baselines (all time)",
+      "description": "baselines registered automatically by interceptor",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [{"expr": "sum(drift_baselines_auto_registered_total) or vector(0)"}],
+      "fieldConfig": {"defaults": {"unit": "short"}},
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4}
+    },
+    {
+      "type": "timeseries",
+      "title": "KL-divergence score per feature (live)",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [
+        {
+          "expr": "drift_detector_kl_score",
+          "legendFormat": "{{feature_name}} · {{model_version}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "decimals": 3,
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0.08},
+              {"color": "red", "value": 0.15}
+            ]
+          }
+        }
+      },
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8}
+    },
+    {
+      "type": "timeseries",
+      "title": "PSI score per feature (live)",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [
+        {
+          "expr": "drift_detector_psi_score",
+          "legendFormat": "{{feature_name}} · {{model_version}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "decimals": 3,
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0.10},
+              {"color": "red", "value": 0.20}
+            ]
+          }
+        }
+      },
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8}
+    },
+    {
+      "type": "timeseries",
+      "title": "MMD p-value (live)",
+      "description": "Inverted threshold: LOW p-value means drift",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [
+        {
+          "expr": "drift_detector_mmd_pvalue",
+          "legendFormat": "{{model_version}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "decimals": 3,
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 0.05},
+              {"color": "green", "value": 0.10}
+            ]
+          }
+        }
+      },
+      "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8}
+    },
+    {
+      "type": "timeseries",
+      "title": "Kafka consumer lag",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [
+        {
+          "expr": "kafka_consumer_lag",
+          "legendFormat": "{{consumer_group}} · {{topic}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1000},
+              {"color": "red", "value": 10000}
+            ]
+          }
+        }
+      },
+      "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8}
+    },
+    {
+      "type": "barchart",
+      "title": "Alerts by feature and detector (24h)",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [
+        {
+          "expr": "increase(drift_alerts_fired_total[24h])",
+          "legendFormat": "{{feature_name}} / {{detector_type}}"
+        }
+      ],
+      "options": {
+        "stacking": "normal",
+        "groupWidth": 0.7,
+        "xTickLabelRotation": 0
+      },
+      "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8}
+    },
+    {
+      "type": "stat",
+      "title": "Alert suppression rate",
+      "description": "high suppression rate means repeated drift on same features",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [
+        {
+          "expr": "rate(drift_alerts_suppressed_total[1h]) / (rate(drift_alerts_fired_total[1h]) + rate(drift_alerts_suppressed_total[1h])) * 100"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 50},
+              {"color": "red", "value": 80}
+            ]
+          }
+        }
+      },
+      "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8}
+    },
+    {
+      "type": "timeseries",
+      "title": "API request duration p99 by endpoint",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, rate(api_request_duration_seconds_bucket[5m]))",
+          "legendFormat": "{{method}} {{endpoint}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3
+        }
+      },
+      "gridPos": {"x": 0, "y": 28, "w": 12, "h": 8}
+    },
+    {
+      "type": "stat",
+      "title": "Retrains triggered (all time)",
+      "description": "total automated retraining jobs dispatched",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [{"expr": "sum(drift_retrains_triggered_total) or vector(0)"}],
+      "fieldConfig": {"defaults": {"unit": "short"}},
+      "gridPos": {"x": 12, "y": 28, "w": 12, "h": 8}
+    },
+    {
+      "type": "timeseries",
+      "title": "PostgreSQL active connections",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [{"expr": "pg_stat_activity_count{datname=\"$POSTGRES_DB\"}"}],
+      "gridPos": {"x": 0, "y": 36, "w": 8, "h": 8}
+    },
+    {
+      "type": "timeseries",
+      "title": "Redis memory usage",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [{"expr": "redis_memory_used_bytes"}],
+      "fieldConfig": {"defaults": {"unit": "bytes"}},
+      "gridPos": {"x": 8, "y": 36, "w": 8, "h": 8}
+    },
+    {
+      "type": "stat",
+      "title": "Redis connected clients",
+      "datasource": {"uid": "prometheus-drift"},
+      "targets": [{"expr": "redis_connected_clients"}],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 80},
+              {"color": "red", "value": 100}
+            ]
+          }
+        }
+      },
+      "gridPos": {"x": 16, "y": 36, "w": 8, "h": 8}
+    }
+  ]
+}
