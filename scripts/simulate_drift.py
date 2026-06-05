@@ -4,7 +4,9 @@ import numpy as np
 import uuid
 import time
 
-INTERCEPTOR_URL = "http://localhost:8000/api/v1/inference"  # Assumed interceptor endpoint
+import os
+
+INTERCEPTOR_URL = os.getenv("INTERCEPTOR_URL", "http://localhost:8000/api/v1/predict")
 CONCURRENCY = 50
 
 async def send_requests(client: httpx.AsyncClient, data: list[dict], batch_name: str) -> None:

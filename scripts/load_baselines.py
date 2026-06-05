@@ -52,11 +52,7 @@ async def main() -> None:
                     continue
                 
                 if len(df) > 50000:
-                    ans = input(f"File {filename} has >50,000 rows. Truncate to 50k? [y/N]: ")
-                    if ans.lower() != 'y':
-                        print(f"Skipping {filename}: Too large.")
-                        results.append((feature_name, len(df), "skipped"))
-                        continue
+                    print(f"Truncating {filename} to 50k rows.")
                     df = df.head(50000)
 
                 arr = df[0].values
@@ -87,10 +83,7 @@ async def main() -> None:
                 
                 status = "inserted"
                 if existing:
-                    ans = input(f"Baseline for '{feature_name}' already exists for model version '{model_version}'. Overwrite? [y/N]: ")
-                    if ans.lower() != 'y':
-                        results.append((feature_name, len(arr), "skipped"))
-                        continue
+                    print(f"Overwriting baseline for '{feature_name}' model '{model_version}'.")
                     status = "updated"
                     existing.raw_samples = arr.tolist()
                     existing.sample_count = len(arr)
